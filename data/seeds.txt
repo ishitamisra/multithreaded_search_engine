@@ -1,0 +1,4 @@
+# One seed URL per line; '#' starts a comment.
+# By default this points at the demo site served locally by scripts/demo.sh
+# (see README.md for how to point it at a real site instead).
+http://127.0.0.1:8090/site/index.html
