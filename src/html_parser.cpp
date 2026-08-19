@@ -103,7 +103,13 @@ std::string resolveUrl(const std::string& baseUrl, const std::string& href) {
     h.erase(h.begin());
   while (!h.empty() && std::isspace(static_cast<unsigned char>(h.back())))
     h.pop_back();
-  if (h.empty() || h[0] == '#') return "";
+  // A fragment identifies a position within a page, not a different
+  // resource (RFC 3986 §3.5) -- strip it so "page.html" and
+  // "page.html#section" dedup to the same URL instead of being fetched
+  // (and indexed) as if they were two different pages.
+  size_t fragmentPos = h.find('#');
+  if (fragmentPos != std::string::npos) h.erase(fragmentPos);
+  if (h.empty()) return "";
 
   std::string lower = toLowerCopy(h);
   if (lower.rfind("javascript:", 0) == 0 || lower.rfind("mailto:", 0) == 0 ||

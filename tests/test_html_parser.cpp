@@ -33,4 +33,13 @@ TEST_MAIN_BEGIN()
   CHECK_EQ(resolveUrl("https://example.com/a/b.html", "#frag"), std::string(""));
   CHECK_EQ(resolveUrl("https://example.com/a/b.html", "javascript:void(0)"),
            std::string(""));
+
+  // A URL fragment must not survive resolution: "Status.html" and
+  // "Status.html#35" are the same document, and the crawler dedups on
+  // this string, so keeping the fragment would cause the same page to
+  // be fetched and indexed twice.
+  CHECK_EQ(resolveUrl("https://example.com/a/b.html", "c.html#section"),
+           std::string("https://example.com/a/c.html"));
+  CHECK_EQ(resolveUrl("https://example.com/a/b.html", "https://x.com/y#top"),
+           std::string("https://x.com/y"));
 TEST_MAIN_END()
