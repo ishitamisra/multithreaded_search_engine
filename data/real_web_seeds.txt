@@ -2,9 +2,17 @@
 # as opposed to data/seeds.txt, which points at the local offline demo site
 # used by scripts/demo.sh.
 #
-# info.cern.ch is the restored site of the first web server ever run (at
-# CERN, 1991) -- a small, static, stable set of interlinked pages that is
-# safe and welcoming to crawl: no robots.txt restrictions, low load, and
-# thematically fitting for a web crawler demo. Add more seeds below if you
-# want a bigger/different crawl -- one URL per line, '#' starts a comment.
-https://info.cern.ch/hypertext/WWW/TheProject.html
+# UCLA's Computer Science department site -- a real, public academic site,
+# thematically relevant if you're demoing this as a UCLA CS student. The
+# crawler respects robots.txt automatically, so any disallowed pages are
+# simply skipped rather than fetched. Keep the page count/delay modest
+# (the script defaults to 15 pages, 2s/host) to stay a polite, light-load
+# crawl of someone else's real server. Add more seeds below for a bigger
+# or different crawl -- one URL per line, '#' starts a comment.
+https://www.cs.ucla.edu/
+
+# info.cern.ch (the restored first website ever, from CERN) is kept below
+# as a fallback: small, static, stable, and welcoming to crawl, with no
+# robots.txt restrictions -- useful if you want a guaranteed-safe backup
+# target. Uncomment to include it in the same crawl:
+# https://info.cern.ch/hypertext/WWW/TheProject.html
