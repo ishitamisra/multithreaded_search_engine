@@ -23,10 +23,38 @@ ctest --test-dir build --output-on-failure   # unit tests
 ```
 
 Requires a C++17 compiler, CMake 3.16+, and POSIX threads. `libcurl`
-(`libcurl4-openssl-dev` on Debian/Ubuntu) is optional but required for the
-crawler to actually fetch pages over the network -- without it the
-crawler still builds and runs, it just can't fetch anything (this is
-detected and reported clearly at both build and run time).
+(`libcurl4-openssl-dev` on Debian/Ubuntu, or `brew install curl` on macOS)
+is optional but required for the crawler to actually fetch pages over the
+network -- without it the crawler still builds and runs, it just can't
+fetch anything (this is detected and reported clearly at both build and
+run time).
+
+### Search the real web (clickable results)
+
+`scripts/demo.sh` indexes a local sample corpus for the CLI-query part of
+its tour, and a locally-served demo site for the crawler part -- both
+run with no internet access, which is why `demo.sh` is safe to use in a
+sandboxed CI environment. But it means those results' links are either
+`file://` URLs (which most browsers block from navigating to when
+clicked from an `http://` page, for security reasons) or `http://
+127.0.0.1:.../` URLs that stop working once the demo's local server
+exits.
+
+To get an index whose results are genuine, permanently clickable web
+pages, crawl the real internet instead:
+
+```sh
+./scripts/crawl_real_web.sh
+```
+
+This crawls a small, real, crawler-friendly site (see
+`data/real_web_seeds.txt`), indexes it, computes PageRank, and starts
+the HTTP UI -- open `http://localhost:8080` and every result links to a
+real page on the actual internet. Edit `data/real_web_seeds.txt` to
+crawl a different site (respect robots.txt and use a reasonable
+`--delay`; the script defaults to 2 seconds per host). Optional
+arguments: `./scripts/crawl_real_web.sh [seeds_file] [output_dir]
+[max_pages] [port]`.
 
 ## Architecture
 

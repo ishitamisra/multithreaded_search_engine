@@ -1,0 +1,10 @@
+# Seed URLs for crawling the REAL internet (see scripts/crawl_real_web.sh),
+# as opposed to data/seeds.txt, which points at the local offline demo site
+# used by scripts/demo.sh.
+#
+# info.cern.ch is the restored site of the first web server ever run (at
+# CERN, 1991) -- a small, static, stable set of interlinked pages that is
+# safe and welcoming to crawl: no robots.txt restrictions, low load, and
+# thematically fitting for a web crawler demo. Add more seeds below if you
+# want a bigger/different crawl -- one URL per line, '#' starts a comment.
+https://info.cern.ch/hypertext/WWW/TheProject.html
