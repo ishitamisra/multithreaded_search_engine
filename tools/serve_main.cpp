@@ -63,22 +63,77 @@ std::string jsonEscape(const std::string& s) {
 }
 
 const char* kPageHeader = R"HTML(<!doctype html>
-<html><head><meta charset="utf-8"><title>Multithreaded Search Engine</title>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multithreaded Search Engine</title>
 <style>
-body { font-family: system-ui, sans-serif; max-width: 700px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
-h1 { font-size: 1.4rem; }
-form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
-input[type=text] { flex: 1; padding: 0.5rem; font-size: 1rem; }
-button { padding: 0.5rem 1rem; }
-.result { margin-bottom: 1.2rem; }
-.result a { font-size: 1.05rem; text-decoration: none; color: #1a4fba; }
-.result .url { color: #2a7d2a; font-size: 0.85rem; }
-.result .snippet { color: #444; font-size: 0.92rem; }
-.result .score { color: #999; font-size: 0.8rem; }
-mark { background: #fff2a8; }
-.meta { color: #777; font-size: 0.85rem; margin-bottom: 1rem; }
+:root {
+  --ink: #16181d;
+  --muted: #5b6472;
+  --faint: #9aa2ad;
+  --accent: #3a4de0;
+  --accent-dark: #2c3bc0;
+  --border: #e6e8ec;
+  --bg: #ffffff;
+  --bg-subtle: #f7f8fa;
+  --mark-bg: #ffe9a8;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg-subtle);
+  color: var(--ink);
+  margin: 0;
+  padding: 3rem 1.25rem 5rem;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.page { max-width: 640px; margin: 0 auto; }
+.brand { display: flex; align-items: baseline; gap: 0.55rem; margin-bottom: 1.75rem; }
+.brand-mark { width: 0.6rem; height: 0.6rem; border-radius: 2px; background: var(--accent); flex: none; }
+h1 { font-size: 1.3rem; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
+form { display: flex; gap: 0.6rem; margin-bottom: 1.5rem; }
+input[type=text] {
+  flex: 1;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.98rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(58,77,224,0.12); }
+button {
+  padding: 0.7rem 1.3rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+button:hover { background: var(--accent-dark); }
+.meta { color: var(--faint); font-size: 0.82rem; margin: 0 0 1.4rem; }
+.results { display: flex; flex-direction: column; }
+.result {
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.result:last-child { border-bottom: none; }
+.result-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.15rem; }
+.result-title a { text-decoration: none; color: var(--accent); }
+.result-title a:hover { text-decoration: underline; }
+.result .url { color: #4b8a5e; font-size: 0.82rem; margin-bottom: 0.35rem; word-break: break-all; }
+.result .snippet { color: var(--muted); font-size: 0.9rem; }
+.result .score { color: var(--faint); font-size: 0.76rem; margin-top: 0.4rem; }
+mark { background: var(--mark-bg); border-radius: 3px; padding: 0 0.15em; }
+.error { color: #b23434; font-size: 0.92rem; }
 </style></head><body>
-<h1>Multithreaded Search Engine</h1>
+<div class="page">
+<div class="brand"><span class="brand-mark"></span><h1>Multithreaded Search Engine</h1></div>
 )HTML";
 
 class SearchApp {
@@ -96,11 +151,11 @@ class SearchApp {
   HttpResponse renderHome() {
     std::ostringstream body;
     body << kPageHeader;
-    body << "<div class=\"meta\">" << reader_.numDocuments() << " documents indexed</div>";
     body << "<form action=\"/search\" method=\"get\">"
             "<input type=\"text\" name=\"q\" placeholder=\"cats AND dogs, \\\"exact phrase\\\", -spam\" autofocus>"
             "<button type=\"submit\">Search</button></form>";
-    body << "</body></html>";
+    body << "<div class=\"meta\">" << reader_.numDocuments() << " documents indexed</div>";
+    body << "</div></body></html>";
     return HttpResponse{200, "text/html; charset=utf-8", body.str()};
   }
 
@@ -148,9 +203,10 @@ class SearchApp {
             "<button type=\"submit\">Search</button></form>";
 
     if (!outcome.ok) {
-      body << "<p>Error: " << htmlEscape(outcome.error) << "</p>";
+      body << "<p class=\"error\">Error: " << htmlEscape(outcome.error) << "</p>";
     } else {
       body << "<div class=\"meta\">" << outcome.totalMatches << " match(es)</div>";
+      body << "<div class=\"results\">";
       SnippetGenerator snippetGen;
       for (const auto& r : outcome.results) {
         const DocumentMeta* doc = reader_.getDocument(r.docId);
@@ -160,7 +216,7 @@ class SearchApp {
         std::string snippet = snippetGen.generate(bodyText, outcome.parsed.terms);
 
         body << "<div class=\"result\">";
-        body << "<div><a href=\"" << htmlEscape(doc->url) << "\">"
+        body << "<div class=\"result-title\"><a href=\"" << htmlEscape(doc->url) << "\">"
              << htmlEscape(doc->title.empty() ? doc->url : doc->title) << "</a></div>";
         body << "<div class=\"url\">" << htmlEscape(doc->url) << "</div>";
         body << "<div class=\"snippet\">" << SnippetGenerator::highlightHtml(snippet, outcome.parsed.terms)
@@ -168,8 +224,9 @@ class SearchApp {
         body << "<div class=\"score\">score " << r.score << "</div>";
         body << "</div>";
       }
+      body << "</div>";
     }
-    body << "</body></html>";
+    body << "</div></body></html>";
     return HttpResponse{200, "text/html; charset=utf-8", body.str()};
   }
 
