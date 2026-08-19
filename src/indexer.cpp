@@ -145,7 +145,11 @@ void Indexer::build(const std::string& directory, InMemoryIndex& postings,
             doc.url = manIt->second.url;
             if (!manIt->second.title.empty()) doc.title = manIt->second.title;
           } else {
-            doc.url = "file://" + files[i].string();
+            // A proper file:// URL needs an absolute path (three slashes
+            // total: scheme + the path's own leading slash) to be
+            // clickable in a browser -- a relative path here would
+            // resolve against the browser's current page instead.
+            doc.url = "file://" + fs::absolute(files[i]).lexically_normal().string();
           }
           if (doc.title.empty()) doc.title = files[i].filename().string();
 
