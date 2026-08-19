@@ -10,6 +10,8 @@ EECS 440 course project ("Basic plan for your project"). See [Level
 mapping](#level-mapping) below for exactly where each requirement lives
 in the code.
 
+![Search results for "multithreading OR crawler" on a locally crawled site, showing highlighted matches, snippets, and relevance scores](docs/search-ui.png)
+
 ## Quick start
 
 ```sh
