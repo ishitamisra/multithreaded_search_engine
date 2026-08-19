@@ -1,14 +1,10 @@
 # Multithreaded Search Engine (C++)
 
-A complete, working internet search engine built from scratch in C++17:
+A  working internet search engine built in C++17: includes
 a multithreaded crawler, a hash-table-based indexer, an on-disk reverse
 index, a boolean query parser/constraint solver, a relevance ranker
 (TF-IDF + PageRank + heuristics), a command-line UI, and an HTTP UI.
 
-It follows the seven-level project plan from the University of Michigan
-EECS 440 course project ("Basic plan for your project"). See [Level
-mapping](#level-mapping) below for exactly where each requirement lives
-in the code.
 
 ![Search results for "ucla computer science" against a real crawl of cs.ucla.edu, showing highlighted matches, snippets, and relevance scores](docs/search-ui.png)
 
@@ -27,14 +23,14 @@ ctest --test-dir build --output-on-failure   # unit tests
 Requires a C++17 compiler, CMake 3.16+, and POSIX threads. `libcurl`
 (`libcurl4-openssl-dev` on Debian/Ubuntu, or `brew install curl` on macOS)
 is optional but required for the crawler to actually fetch pages over the
-network -- without it the crawler still builds and runs, it just can't
+network. Without it the crawler still builds and runs, it just can't
 fetch anything (this is detected and reported clearly at both build and
 run time).
 
 ### Search the real web (clickable results)
 
 `scripts/demo.sh` indexes a local sample corpus for the CLI-query part of
-its tour, and a locally-served demo site for the crawler part -- both
+its tour, and a locally-served demo site for the crawler part. Both
 run with no internet access, which is why `demo.sh` is safe to use in a
 sandboxed CI environment. But it means those results' links are either
 `file://` URLs (which most browsers block from navigating to when
@@ -117,37 +113,26 @@ crawl ──> pages/ + manifest.tsv ──> build_index ──> foo.{docs,lex,po
 ### Command-line tools
 
 ```sh
-# Index a local corpus (plain text or HTML) -- Levels 1 & 3
+# Index local corpus (plain text or HTML) -- 
 build/build_index data/sample_corpus /tmp/myindex --threads 4 [--stopwords] [--stem]
 
-# Query it -- Levels 4, 5, 6 -- interactively or one-shot
+# Query it -- 
 build/query /tmp/myindex
 build/query /tmp/myindex 'cats AND dogs'
 build/query /tmp/myindex '"exact phrase" OR (fast -slow)'
 
-# Serve a browser UI + JSON API -- Level 4
+# Serve a browser UI 
 build/serve /tmp/myindex 8080     # http://localhost:8080
 
-# Crawl the web (or a local site) -- Level 2
+# Crawl the web 
 build/crawl data/seeds.txt /tmp/mycrawl --max-pages 50 --threads 4
 build/build_index /tmp/mycrawl /tmp/myindex   # note: the crawl OUTPUT DIR,
                                                # not its pages/ subfolder --
                                                # that's where manifest.tsv lives
 
-# Compute PageRank over an already-built index's link graph -- Level 7.5
+# Compute PageRank over index's link graph 
 build/pagerank_tool /tmp/myindex --iterations 30
 # (query/serve automatically pick up /tmp/myindex.pagerank on next load)
-```
-
-## Query language
-
-```
-cats dogs                implicit AND
-cats AND dogs             explicit AND
-cats OR dogs               union
-cats -dogs                 AND NOT (also: cats NOT dogs)
-"exact phrase match"        consecutive-word phrase
-(cats OR dogs) AND -training   grouping
 ```
 
 Grammar (top-down recursive descent, `query_parser.cpp`):
@@ -205,23 +190,15 @@ separation real search engines use.
   score vector, so this parallelizes cleanly); the HTTP server hands
   each connection to a thread pool.
 
-## What's intentionally not implemented
+## Advanced Functionality / Add-ons
 
-Level 7 ("Advanced functionality") lists several stretch goals beyond
-what a from-scratch course project needs to demonstrate the core
-pipeline. Implemented: snippets (7.3), anchor-text-aware link/title
-signals feeding the ranker (7.4), and PageRank (7.5). **Not**
-implemented, as a deliberate scope decision:
 
 - **7.1/7.2 Gradient descent / ML ranking** -- would need a labeled
-  training set that doesn't exist for a from-scratch demo corpus;
-  `ranker.h`'s linear combination of signals is the classical
-  alternative and is where a learned model would plug in.
+  training set that doesn't exist for a from-scratch demo corpus.
 - **7.6 Distributed crawling/indexing/query** -- this codebase
-  parallelizes with threads on one machine; sharding across machines is
-  a substantial distributed-systems project on its own.
-- **7.7 PDF indexing** -- `indexer.h` only handles plain text and HTML;
-  extending it means adding a PDF-to-text extraction step ahead of
+  parallelizes with threads on a single machine.
+- **7.7 PDF indexing** -- `indexer.h` only handles plain text and HTML. 
+  Extending it means adding a PDF-to-text extraction step ahead of
   tokenization (e.g. shelling out to `pdftotext`).
 
 ## Testing
@@ -230,15 +207,12 @@ implemented, as a deliberate scope decision:
 parser, hash table, thread pool, index write/read round-tripping, the
 AND/OR/NOT/PHRASE stream readers, and the query parser (including error
 cases like unbalanced parens and all-negated clauses). `scripts/demo.sh`
-is the end-to-end smoke test: it exercises every tool against real data,
-including a real (local) HTTP crawl.
+is the end-to-end smoke test: it tests every tool against real data,
+including a (local) HTTP crawl.
 
-## Known limitations
+## Limitations
 
-- The HTTP server is HTTP/1.1 without keep-alive, chunked transfer, or
-  TLS -- adequate for a local search UI, not for exposing to the
-  internet directly.
+- The HTTP server is HTTP/1.1 without keep-alive, or
+  TLS.
 - The crawler's URL-priority strategy is plain BFS (nearer to the seeds
-  first); no content-quality-based frontier prioritization.
-- The stemmer is a small hand-written suffix stripper, not a full Porter
-  stemmer.
+  first); it does not include content-quality-based frontier prioritization.
